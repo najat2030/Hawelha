@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title">تطبيق حوّلها | Hawelha</title>
+    <!-- تحميل Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* خط عربي محسن */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fc;
+            min-height: 100vh;
+        }
+        .main-container {
+            max-width: 420px; /* محاكاة عرض شاشة الموبايل */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .file-input-label {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .file-input-label:hover {
+            background-color: #2563eb;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+        .shadow-soft {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+<div id="app" class="main-container w-full bg-white rounded-xl overflow-hidden">
+
+    <!-- شريط العنوان -->
+    <header class="bg-blue-600 p-4 text-white text-center rounded-t-xl">
+        <div class="flex items-center justify-center space-x-2 space-x-reverse">
+            <!-- الشعار الآن هو صورة وهمية (Placeholder) تحاكي تصميم "Hawelha" -->
+            <!-- يجب عليك استبدال هذا الرابط برابط الشعار الحقيقي بعد رفعه -->
+            <img id="app-logo" src="https://placehold.co/40x40/B91C1C/ffffff?text=H" alt="شعار حوّلها" class="w-10 h-10 rounded-lg">
+            <div>
+                <h1 class="text-xl font-bold" id="app-name-display">Hawelha | حوّلها</h1>
+                <p class="text-sm opacity-90 mt-1">مُحوّل فواتير PDF الذكي</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="p-6 space-y-8">
+        <!-- قسم رفع الملف -->
+        <section class="space-y-4">
+            <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">الخطوة 1: رفع ملف PDF النظيف</h2>
+            
+            <label for="pdf-upload" class="file-input-label flex flex-col items-center justify-center p-6 bg-blue-50 border-2 border-blue-400 border-dashed text-blue-700 rounded-lg hover:bg-blue-100">
+                <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span id="file-name" class="font-medium text-sm">اضغط هنا لاختيار ملف فاتورة PDF</span>
+            </label>
+            <input type="file" id="pdf-upload" accept=".pdf" class="hidden" onchange="displayFileName(event)">
+        </section>
+
+        <!-- قسم الأعمدة المطلوبة -->
+        <section class="space-y-4">
+            <h2 class="text-lg font-semibold text-gray-700 border-b pb-2">الخطوة 2: الأعمدة المستهدفة (من اليمين لليسار)</h2>
+            <div class="bg-gray-50 p-4 rounded-lg shadow-soft text-sm">
+                <p class="font-bold text-blue-600 mb-2">سيتم استخراج وترتيب الأعمدة كالتالي:</p>
+                <ul class="list-disc list-inside space-y-1 text-gray-600 grid grid-cols-2 gap-x-4">
+                    <li>الرقم</li>
+                    <li>الرسوم الشهرية</li>
+                    <li>المكالمات المحلية</li>
+                    <li>الرسائل المحلية</li>
+                    <li>انترنت محلي</li>
+                    <li>مكالمات دولية</li>
+                    <li>رسائل دولية</li>
+                    <li>انترنت تجوال</li>
+                    <li>رسوم التسوية</li>
+                    <li>قيمة الضرائب</li>
+                    <li>الاجمالي</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- زر التحويل -->
+        <button id="convert-button" onclick="handleConversion()" disabled class="w-full py-3 bg-gray-400 text-white font-bold rounded-lg transition duration-300 ease-in-out cursor-not-allowed">
+            التحويل والتنزيل (يُرجى رفع ملف أولاً)
+        </button>
+
+        <!-- رسالة الحالة (للتنبيهات) -->
+        <div id="message-box" class="hidden p-3 rounded-lg text-sm text-center"></div>
+
+    </main>
+    
+    <footer class="text-center text-xs p-3 text-gray-500 border-t">
+        <p>تم التصميم بواسطة <span id="footer-credit">Noga Design</span> لغرض الاستخدام الخاص بالشركة.</p>
+    </footer>
+
+</div>
+
+<script>
+    // ==========================================================
+    // ** التعديلات الجديدة للشعار والاسم **
+    // تم تثبيت الاسم Hawelha وشعار وهمي (Placeholder)
+    const APP_DISPLAY_NAME = "Hawelha | حوّلها"; 
+    // ملاحظة هامة: هذا الرابط هو شعار وهمي. إذا كان لديك الشعار على الإنترنت، استبدله به.
+    const APP_LOGO_URL = "https://placehold.co/40x40/B91C1C/ffffff?text=H"; 
+    const FOOTER_NAME = "Noga Design"; // حسب ما هو مكتوب في الصورة
+    // ==========================================================
+
+    // تحديث عناصر الواجهة بالبيانات الجديدة
+    document.getElementById('app-title').textContent = APP_DISPLAY_NAME;
+    document.getElementById('app-name-display').textContent = APP_DISPLAY_NAME;
+    document.getElementById('app-logo').src = APP_LOGO_URL;
+    document.getElementById('footer-credit').textContent = FOOTER_NAME;
+
+
+    const convertButton = document.getElementById('convert-button');
+    const fileNameDisplay = document.getElementById('file-name');
+    const messageBox = document.getElementById('message-box');
+    let selectedFile = null;
+
+    // تعريف الأعمدة المطلوبة بترتيبها النهائي (من اليمين لليسار)
+    const COLUMN_HEADERS_RTL = [
+        "الاجمالي",
+        "قيمة الضرائب",
+        "رسوم التسوية",
+        "انترنت تجوال",
+        "رسائل تجوال",
+        "مكالمات تجوال",
+        "رسائل دولية",
+        "مكالمات دولية",
+        "انترنت محلي",
+        "الرسائل المحلية",
+        "المكالمات المحلية",
+        "الرسوم الشهرية",
+        "الرقم",
+    ];
+    
+    // ==========================================================
+    // محاكاة البيانات المستخلصة من PDF (نفس البيانات السابقة)
+    // ==========================================================
+    const MOCK_EXTRACTED_DATA = [
+        {
+            "الرقم": "٠١٠٠٢٧٧٩٨٧٤",
+            "الرسوم الشهرية": 44.50,
+            "المكالمات المحلية": 12.00,
+            "الرسائل المحلية": 0.00,
+            "انترنت محلي": 20.00,
+            "مكالمات دولية": 5.00,
+            "رسائل دولية": 0.00,
+            "مكالمات تجوال": 0.00,
+            "رسائل تجوال": 0.00,
+            "انترنت تجوال": 0.00,
+            "رسوم التسوية": 0.00,
+            "قيمة الضرائب": 6.70,
+            "الاجمالي": 52.20
+        },
+        {
+            "الرقم": "٠١٠٠٣٧٧٧٧٥٠",
+            "الرسوم الشهرية": 30.00,
+            "المكالمات المحلية": 8.50,
+            "الرسائل المحلية": 0.00,
+            "انترنت محلي": 15.00,
+            "مكالمات دولية": 0.00,
+            "رسائل دولية": 0.00,
+            "مكالمات تجوال": 0.00,
+            "رسائل تجوال": 0.00,
+            "انترنت تجوال": 0.00,
+            "رسوم التسوية": 2.50,
+            "قيمة الضرائب": 5.48,
+            "الاجمالي": 40.85
+        },
+        {
+            "الرقم": "٠١٠٠٢٥٩١٥٥٥",
+            "الرسوم الشهرية": 60.00,
+            "المكالمات المحلية": 25.00,
+            "الرسائل المحلية": 1.00,
+            "انترنت محلي": 30.00,
+            "مكالمات دولية": 10.00,
+            "رسائل دولية": 0.00,
+            "مكالمات تجوال": 5.00,
+            "رسائل تجوال": 0.00,
+            "انترنت تجوال": 0.00,
+            "رسوم التسوية": 0.00,
+            "قيمة الضرائب": 15.00,
+            "الاجمالي": 78.58
+        }
+    ];
+
+    /**
+     * يعرض اسم الملف المختار ويقوم بتفعيل زر التحويل
+     */
+    function displayFileName(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            fileNameDisplay.textContent = تم اختيار: ${file.name};
+            convertButton.disabled = false;
+            convertButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            convertButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
+            showMessage(ملف ${file.name} جاهز للتحويل., 'success');
+        } else {
+            selectedFile = null;
+            fileNameDisplay.textContent = 'اضغط هنا لاختيار ملف فاتورة PDF';
+            convertButton.disabled = true;
+            convertButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+            convertButton.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
+        }
+    }
+
+    /**
+     * يتعامل مع عملية التحويل (الوهمية) وتنزيل ملف CSV.
+     */
+    function handleConversion() {
+        if (!selectedFile) {
+            showMessage("يجب اختيار ملف PDF أولاً.", 'error');
+            return;
+        }
+
+        // 1. محاكاة عملية التحويل
+        convertButton.disabled = true;
+        convertButton.textContent = "جاري معالجة البيانات...";
+        showMessage("جاري قراءة واستخراج البيانات من PDF... (محاكاة)", 'info');
+
+        // محاكاة تأخير للعملية (3 ثواني)
+        setTimeout(() => {
+            const dataToExport = MOCK_EXTRACTED_DATA;
+            if (dataToExport.length === 0) {
+                showMessage("لم يتم العثور على أي بيانات لاستخراجها.", 'error');
+                resetButton();
+                return;
+            }
+
+            // 2. توليد ملف CSV
+            const csvContent = generateCSV(dataToExport, COLUMN_HEADERS_RTL);
+            
+            // 3. تنزيل الملف
+            downloadFile(csvContent, 'تقرير_فواتير_مستخرج.csv', 'text/csv;charset=utf-8;');
+
+            showMessage("تم بنجاح! تم تنزيل ملف Excel (CSV) على جهازك.", 'success');
+            resetButton();
+
+        }, 3000); 
+    }
+
+    /**
+     * يعيد زر التحويل إلى حالته الأصلية
+     */
+    function resetButton() {
+        convertButton.disabled = false;
+        convertButton.textContent = "التحويل والتنزيل";
+    }
+
+    /**
+     * يعرض رسالة للمستخدم
+     */
+    function showMessage(message, type) {
+        messageBox.textContent = message;
+        messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+        
+        if (type === 'success') {
+            messageBox.classList.add('bg-green-100', 'text-green-700');
+        } else if (type === 'error') {
+            messageBox.classList.add('bg-red-100', 'text-red-700');
+        } else {
+            messageBox.classList.add('bg-blue-100', 'text-blue-700');
+        }
+    }
+
+    /**
+     * يقوم بتحويل البيانات إلى صيغة CSV بترميز UTF-8
+     * ويضمن ترتيب الأعمدة من اليمين لليسار كما طلب المستخدم
+     */
+    function generateCSV(data, headers) {
+        // ترتيب رؤوس الأعمدة: يجب عكسها لجعل "الاجمالي" هو العمود الأول في CSV
+        const orderedHeaders = [...headers].reverse();
+        
+        let csv = orderedHeaders.join(',') + '\n';
+
+        data.forEach(row => {
+            const values = orderedHeaders.map(header => {
+                // التأكد من أن القيمة موجودة أو وضع قيمة فارغة
+                let value = row[header] !== undefined ? row[header] : ''; 
+                // تنسيق الأرقام لتجنب مشاكل الفاصلة العشرية في برامج Excel المختلفة
+                value = String(value).replace(/\./g, ','); 
+                // إحاطة القيم بنص إذا كانت تحتوي على فواصل أو اقتباسات
+                value = "${value}";
+                return value;
+            });
+            csv += values.join(',') + '\n';
+        });
+
+        // إضافة BOM (Byte Order Mark) لضمان أن برامج Excel تتعرف على الترميز العربي (UTF-8)
+        const bom = "\uFEFF";
+        return bom + csv;
+    }
+
+    /**
+     * يقوم بتنزيل المحتوى كملف
+     */
+    function downloadFile(content, fileName, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+</body>
+</html>
